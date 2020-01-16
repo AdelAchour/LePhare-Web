@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>LePhare Enquete</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->
+	<link rel="icon" type="image/png" href="images/icons/icon_phare.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+          crossorigin="anonymous">
+<!--===============================================================================================-->
+</head>
+<body>
+
+	<div class="contact1">
+		<div class="container-contact1">
+			<div class="contact1-pic js-tilt" data-tilt>
+				<img src="images/img-01.png" alt="IMG">
+			</div>
+
+            <!-- Spinner -->
+            <div class="spinner-grow text-primary" role="status" id="spinner">
+                <span class="sr-only">Loading...</span>
+            </div>
+
+			<form class="contact1-form validate-form" id="form-link">
+				<span class="contact1-form-title">
+					LePhare Enquête
+				</span>
+
+
+				<!-- Link -->
+				<div class="wrap-input1 validate-input" data-validate = "Lien obligatoire">
+					<input class="input1" type="text" id="link" name="name" placeholder="Lien de l'enquête">
+					<span class="shadow-input1"></span>
+				</div>
+
+				<!-- Button -->
+				<div class="container-contact1-form-btn">
+					<button class="contact1-form-btn">
+						<span>
+							Enregistrer
+							<i class="fa fa-long-arrow-right" aria-hidden="true"></i>
+						</span>
+					</button>
+				</div>
+
+                <!-- Alert Bad -->
+                <div style="display: none; margin-top: 15px;" class="alert alert-danger" role="alert" id="alertBad">
+                </div>
+
+                <!-- Alert Good -->
+                <div style="display: none; margin-top: 15px;" class="alert alert-success alert-dismissible fade show" role="alert" id="alertGood">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+			</form>
+
+		</div>
+	</div>
+
+
+
+    <script src="https://www.gstatic.com/firebasejs/7.6.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.6.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.6.0/firebase-auth.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/bootstrap/js/popper.js"></script>
+	<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/tilt/tilt.jquery.min.js"></script>
+	<script >
+		$('.js-tilt').tilt({
+			scale: 1.1
+		})
+	</script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-23581568-13"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-23581568-13');
+</script>
+
+<!--===============================================================================================-->
+	<script src="js/main.js"></script>
+    <script src="js/firebaseApp.js"></script>
+
+
+
+<script>
+    var db = firebase.firestore();
+    const spinner = document.getElementById('spinner');
+
+    displaySpinner();
+    //getLink();
+
+    function getLink() {
+        var docRef = db.collection("links").doc("thelink");
+        docRef.get().then(function(doc) {
+            if (doc.exists) {
+                console.log("Document data:", doc.data());
+                populateField(doc);
+            } else {
+                // doc.data() will be undefined in this case
+                console.log("No such document!");
+            }
+        }).catch(function(error) { console.log("Error getting document:", error);});
+    }
+
+    function populateField(doc) {
+        var linkTV = document.getElementById('link');
+        linkTV.value = doc.get("url");
+        dismissSpinner();
+    }
+
+    function displaySpinner() {
+        spinner.style.display = "block";
+    }
+
+    function dismissSpinner() {
+        spinner.style.display = "none";
+    }
+
+</script>
+
+<script>
+
+    const alertBad = document.getElementById('alertBad');
+    const alertGood = document.getElementById('alertGood');
+
+    $('#form-link').on('submit', function (e) {
+        console.log('\nclicked !');
+        e.preventDefault();
+
+        displaySpinner();
+
+        var link = $("#link").val();
+        populateDB(link);
+
+        function populateDB(link) {
+            console.log("\npopulating the database...\n");
+
+            return db.collection("links").doc("thelink").update({
+                    url: link
+                }).then(function() {
+                    console.log("Document successfully updated!");
+                    dismissBadAlert();
+                    displayGoodAlert("Lien modifié avec succès");
+                }).catch(function(error) {
+                    // The document probably doesn't exist.
+                    console.error("Error updating document: ", error);
+                    dismissGoodAlert();
+                    displayBadAlert("Impossible de modifier le lien. Réessayez");
+                });
+        }
+
+        /** display good alert **/
+        function displayGoodAlert(text) {
+            dismissBadAlert();
+            dismissSpinner();
+            alertGood.innerText = text;
+            alertGood.style.display = "block";
+        }
+
+        /** display bad alert **/
+        function displayBadAlert(text) {
+            dismissGoodAlert();
+            dismissSpinner();
+            alertBad.innerText = text;
+            alertBad.style.display = "block";
+        }
+
+        /** dismiss good alert **/
+        function dismissGoodAlert() {
+            dismissSpinner();
+            alertGood.style.display = "none";
+        }
+
+        /** dismiss bad alert **/
+        function dismissBadAlert() {
+            dismissSpinner();
+            alertBad.style.display = "none";
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
